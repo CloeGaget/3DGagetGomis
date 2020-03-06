@@ -71,25 +71,58 @@
       }
 
       float computeHeight(in vec2 p) {
-	  // vous pouvez modifier cette fonction comme vous
-	  // le souhaitez pour fabriquer votre propre background
-	  return fractalNoise(p)*0.5+0.5;
-      }
+      	  // vous pouvez modifier cette fonction comme vous
+      	  // le souhaitez pour fabriquer votre propre background
+      	  //return fractalNoise(p)*0.5+0.5;
+          float noise = fractalNoise(p)*0.9+0.9;
+          if (noise < -0.8) {
+            noise = 0.0;
+            //return cos(noise) *0.5;
+          }
+          return noise;
+    }
 
-      vec3 computeNormal(in vec2 p) {
-	  float scale = 70.0;
-	  float xp = computeHeight(p+vec2( 0.001,0.0));
-	  float xm = computeHeight(p+vec2(-0.001,0.0));
-	  float yp = computeHeight(p+vec2(0.0, 0.001));
-	  float ym = computeHeight(p+vec2(0.0,-0.001));
+    vec3 computeNormal(in vec2 p) {
+    	  // float scale = 70.0;
+    	  // float xp = computeHeight(p+vec2( 0.001,0.0));
+    	  // float xm = computeHeight(p+vec2(-0.001,0.0));
+    	  // float yp = computeHeight(p+vec2(0.0, 0.001));
+    	  // float ym = computeHeight(p+vec2(0.0,-0.001));
+        //
+    	  // float gx = 0.5*(xp-xm)*scale;
+    	  // float gy = 0.5*(yp-ym)*scale;
+        //
+    	  // vec3 v1 = normalize(vec3(1.0,0.0,gx));
+    	  // vec3 v2 = normalize(vec3(0.0,1.0,gy));
+        //
+    	  // return cross(v1,v2);
 
-	  float gx = 0.5*(xp-xm)*scale;
-	  float gy = 0.5*(yp-ym)*scale;
+        float scale = 70.0;
+        //float xp = computeHeight(p+vec2( 0.001,0.0));
+        float xp = computeHeight(sin(uOffset) * 0.2);
+        float xm = computeHeight(p+vec2(-0.001,0.0));
+        float yp = computeHeight(p+vec2(0.0, 0.001));
+        float ym = computeHeight(cos(uOffset) * 0.2);
+        //float ym = computeHeight(p+vec2(0.0,-0.001));
 
-	  vec3 v1 = normalize(vec3(1.0,0.0,gx));
-	  vec3 v2 = normalize(vec3(0.0,1.0,gy));
+        float gx = 0.04*(xp-xm)*scale;
+        float gy = 0.1*(yp-ym)*scale - 0.2;
 
-	  return cross(v1,v2);
+        if (gx > 0.5) {
+          gx = 1.0;
+        }
+        // vec3 v1 = normalize(vec3(1.0, gx, gy));
+        vec3 v1 = normalize(vec3(1.0, gx, gy));
+        if (gx < 0.0 || gy < 0.0 ) {
+          v1 = vec3(0.0, 0.0, 0.0);
+        // vec3 v2 = normalize(vec3(1.0,0.0,gx));
+        // vec3 v3 = normalize(vec3(0.0,1.0,gy));
+        //
+        // v1 = cross(v2,v3);
+        }
+        return v1;
+        //float xp = computeHeight(p)
+        //return vec3(0.5, 0.5, 0.5);
       }
 
     void main(void) { // Méthode pour l'aspect du background (Génération dite "procédurale" du background)
@@ -99,24 +132,25 @@
   	  float d = computeHeight(p); // profondeur au point p
   	  vec3 n = computeNormal(p); // normale au point p
 
+      //float test = sin(computeHeight(p) * 5.0);
   	  // affichage de la profondeur
   	  //outColor = vec4(d,d,d,1.0);
-      outColor = vec4(d, d, d, 0.8);
-
+      //outColor = vec4(d, d, 0.4, 0.5);
+      //outColor = vec4(1.0, computeHeight(p), computeHeight(uOffset), 1.0);
   	  // affichage de la normale
-  	  //outColor = vec4(n,1.0);
+  	  outColor = vec4(n, 1.0);
 
 
       /* Exemple pour faire un quadrillage (il manque un truc) */
       // float test1 = sin(vTextureCoord.x * 50.0);
       // float test2 = sin(vTextureCoord.y * 50.0);
-      //
-      // float test = distance(fract((vTextureCoord + uOffset) * 10.0), vec2(0.5));
-      // test = test < 0.2 ? 1. : 0.;
 
-      //float test = fractalNoise(vTextureCoord)*0.5+0.5;
+      // float test = distance(fract((vTextureCoord + uOffset) * 10.0), vec2(0.5));
+      //test = test < 0.2 ? 1. : 0.;
+
+      // float test3 = fractalNoise(vTextureCoord)*0.5+0.5;
       // outColor = vec4(vec3(test), 1.0);
-      //vec3 l = vec3(-1.0, 0.0, 1.0);
+      // vec3 l = vec3(-1.0, 0.0, 1.0);
       //float diff =
     }
 
@@ -130,14 +164,18 @@
       uniform mat4 uModelMatrix;
       uniform mat4 uViewMatrix;
       uniform mat4 uProjMatrix;
-
+      uniform float uTimer;
       out vec3 vNormal;
 
       void main(void) {
         //  const vec4 outColor;
-
+          vec3 p = aVertexPosition;
+          p.z = p.z+abs(p.x) * sin(uTimer);
+          //p.z = abs(p.x)*5.;
+          gl_Position = uProjMatrix * uViewMatrix * uModelMatrix * vec4(p, 1.0);
           // projection de la position
-          gl_Position = uProjMatrix * uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
+
+          //gl_Position = uProjMatrix * uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
           vNormal = mat3(inverse(transpose(uViewMatrix * uModelMatrix)))*normalize(aVertexNormal);
           //
           // vec3 n = normalize(vNormal);
