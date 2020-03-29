@@ -8,6 +8,7 @@
     <script type="text/javascript" src="background.js"></script>
     <script type="text/javascript" src="modelObj.js"></script>
     <script type="text/javascript" src="splat.js"></script>
+    <script type="text/javascript" src="mechant.js"></script>
 
     <script id="background-vs" type="x-shader/x-vertex">#version 300 es
       // *** le vertex shader ***
@@ -26,134 +27,92 @@
     </script>
 
     <script id="background-fs" type="x-shader/x-fragment">#version 300 es
-      // *** le fragment shader ***
-      precision highp float; // precision des nombres flottant
+        // *** le fragment shader ***
+        precision highp float; // precision des nombres flottant
 
-      uniform vec2 uOffset;
-      uniform float uAmplitude; // amplitude du bruit
-      uniform float uFrequency; // frequence du bruit
-      uniform float uPersistence; // persistence du bruit
+        uniform vec2 uOffset;
+        uniform float uAmplitude; // amplitude du bruit
+        uniform float uFrequency; // frequence du bruit
+        uniform float uPersistence; // persistence du bruit
 
-    in vec2 vTextureCoord; // recuperation de la coord rasterisee
-      out vec4 outColor;
+        in vec2 vTextureCoord; // recuperation de la coord rasterisee
+        out vec4 outColor;
 
-      vec2 hash22(vec2 p) {
-	  vec2 q = vec2(dot(p,vec2(127.1,311.7)),
-			dot(p,vec2(269.5,183.3)));
-	  return fract(sin(q)*43758.5453123)*2.-1.;
-      }
+        vec2 hash22(vec2 p) {
+  	       vec2 q = vec2(dot(p,vec2(127.1,311.7)),
+  			      dot(p,vec2(269.5,183.3)));
+  	       return fract(sin(q)*43758.5453123)*2.-1.;
+        }
 
-      float gnoise(in vec2 x) {
-	  vec2 p = floor(x);
-	  vec2 f = fract(x);
-	  vec2 m = f*f*(3.-2.*f);
+        float gnoise(in vec2 x) {
+      	  vec2 p = floor(x);
+      	  vec2 f = fract(x);
+      	  vec2 m = f*f*(3.-2.*f);
 
-	  return mix(
-	      mix(dot(hash22(p+vec2(0.,0.)),f-vec2(0.,0.)),
-		  dot(hash22(p+vec2(1.,0.)),f-vec2(1.,0.)),m.x),
-	      mix(dot(hash22(p+vec2(0.,1.)),f-vec2(0.,1.)),
-		  dot(hash22(p+vec2(1.,1.)),f-vec2(1.,1.)),m.x),m.y);
-      }
+  	       return mix(
+  	        mix(dot(hash22(p+vec2(0.,0.)),f-vec2(0.,0.)),
+  		      dot(hash22(p+vec2(1.,0.)),f-vec2(1.,0.)),m.x),
+  	        mix(dot(hash22(p+vec2(0.,1.)),f-vec2(0.,1.)),
+  		      dot(hash22(p+vec2(1.,1.)),f-vec2(1.,1.)),m.x),m.y);
+        }
 
-      float fractalNoise(in vec2 p) {
-       	  const int nb = 5; // nb octave
-       	  float f = uFrequency; // frequency
-       	  float a = uAmplitude; // amplitude
-       	  float e = uPersistence; // persistence
+        float fractalNoise(in vec2 p) {
+         	  const int nb = 5; // nb octave
+         	  float f = uFrequency; // frequency
+         	  float a = uAmplitude; // amplitude
+         	  float e = uPersistence; // persistence
 
-       	  float n = 0.0;
-       	  for(int i=0;i<nb;++i) {
-              n = n + a*gnoise(p*f);
-              f = 2.0*f;
-              a = a*e;
-       	  }
-       	  return n;
-      }
+         	  float n = 0.0;
+         	  for(int i=0;i<nb;++i) {
+                n = n + a*gnoise(p*f);
+                f = 2.0*f;
+                a = a*e;
+         	  }
+         	  return n;
+        }
 
-      float computeHeight(in vec2 p) {
-      	  // vous pouvez modifier cette fonction comme vous
-      	  // le souhaitez pour fabriquer votre propre background
-      	  //return fractalNoise(p)*0.5+0.5;
-          float noise = fractalNoise(p)*0.9+0.9;
-          if (noise < -0.8) {
-            noise = 0.0;
-            //return cos(noise) *0.5;
+        float computeHeight(in vec2 p) {
+        	  // vous pouvez modifier cette fonction comme vous
+        	  // le souhaitez pour fabriquer votre propre background
+        	  //return fractalNoise(p)*0.5+0.5;
+            float noise = fractalNoise(p)*0.9+0.9;
+            if (noise < -0.8) {
+              noise = 0.0;
+              //return cos(noise) *0.5;
+            }
+            return noise;
+       }
+
+      vec3 computeNormal(in vec2 p) {
+          float scale = 70.0;
+          //float xp = computeHeight(p+vec2( 0.001,0.0));
+          float xp = computeHeight(sin(uOffset) * 0.2);
+          float xm = computeHeight(p+vec2(-0.001,0.0));
+          float yp = computeHeight(p+vec2(0.0, 0.001));
+          float ym = computeHeight(cos(uOffset) * 0.2);
+          //float ym = computeHeight(p+vec2(0.0,-0.001));
+
+          float gx = 0.04*(xp-xm)*scale;
+          float gy = 0.1*(yp-ym)*scale - 0.2;
+
+          if (gx > 0.5) {
+            gx = 1.0;
           }
-          return noise;
-    }
-
-    vec3 computeNormal(in vec2 p) {
-    	  // float scale = 70.0;
-    	  // float xp = computeHeight(p+vec2( 0.001,0.0));
-    	  // float xm = computeHeight(p+vec2(-0.001,0.0));
-    	  // float yp = computeHeight(p+vec2(0.0, 0.001));
-    	  // float ym = computeHeight(p+vec2(0.0,-0.001));
-        //
-    	  // float gx = 0.5*(xp-xm)*scale;
-    	  // float gy = 0.5*(yp-ym)*scale;
-        //
-    	  // vec3 v1 = normalize(vec3(1.0,0.0,gx));
-    	  // vec3 v2 = normalize(vec3(0.0,1.0,gy));
-        //
-    	  // return cross(v1,v2);
-
-        float scale = 70.0;
-        //float xp = computeHeight(p+vec2( 0.001,0.0));
-        float xp = computeHeight(sin(uOffset) * 0.2);
-        float xm = computeHeight(p+vec2(-0.001,0.0));
-        float yp = computeHeight(p+vec2(0.0, 0.001));
-        float ym = computeHeight(cos(uOffset) * 0.2);
-        //float ym = computeHeight(p+vec2(0.0,-0.001));
-
-        float gx = 0.04*(xp-xm)*scale;
-        float gy = 0.1*(yp-ym)*scale - 0.2;
-
-        if (gx > 0.5) {
-          gx = 1.0;
+          // vec3 v1 = normalize(vec3(1.0, gx, gy));
+          vec3 v1 = normalize(vec3(1.0, gx, gy));
+          if (gx < 0.0 || gy < 0.0 ) {
+            v1 = vec3(0.0, 0.0, 0.0);
+          }
+          return v1;
         }
-        // vec3 v1 = normalize(vec3(1.0, gx, gy));
-        vec3 v1 = normalize(vec3(1.0, gx, gy));
-        if (gx < 0.0 || gy < 0.0 ) {
-          v1 = vec3(0.0, 0.0, 0.0);
-        // vec3 v2 = normalize(vec3(1.0,0.0,gx));
-        // vec3 v3 = normalize(vec3(0.0,1.0,gy));
-        //
-        // v1 = cross(v2,v3);
-        }
-        return v1;
-        //float xp = computeHeight(p)
-        //return vec3(0.5, 0.5, 0.5);
+
+      void main(void) { // Méthode pour l'aspect du background (Génération dite "procédurale" du background)
+    	  vec2 p = vTextureCoord*2.0-vec2(1.0)+uOffset;
+
+    	  float d = computeHeight(p); // profondeur au point p
+    	  vec3 n = computeNormal(p); // normale au point p
+    	  outColor = vec4(n, 1.0);
       }
-
-    void main(void) { // Méthode pour l'aspect du background (Génération dite "procédurale" du background)
-  	  // d�calage avec la variable uOffset
-  	  vec2 p = vTextureCoord*2.0-vec2(1.0)+uOffset;
-
-  	  float d = computeHeight(p); // profondeur au point p
-  	  vec3 n = computeNormal(p); // normale au point p
-
-      //float test = sin(computeHeight(p) * 5.0);
-  	  // affichage de la profondeur
-  	  //outColor = vec4(d,d,d,1.0);
-      //outColor = vec4(d, d, 0.4, 0.5);
-      //outColor = vec4(1.0, computeHeight(p), computeHeight(uOffset), 1.0);
-  	  // affichage de la normale
-  	  outColor = vec4(n, 1.0);
-
-
-      /* Exemple pour faire un quadrillage (il manque un truc) */
-      // float test1 = sin(vTextureCoord.x * 50.0);
-      // float test2 = sin(vTextureCoord.y * 50.0);
-
-      // float test = distance(fract((vTextureCoord + uOffset) * 10.0), vec2(0.5));
-      //test = test < 0.2 ? 1. : 0.;
-
-      // float test3 = fractalNoise(vTextureCoord)*0.5+0.5;
-      // outColor = vec4(vec3(test), 1.0);
-      // vec3 l = vec3(-1.0, 0.0, 1.0);
-      //float diff =
-    }
-
     </script>
 
     <script id="model-vs" type="x-shader/x-vertex">#version 300 es
@@ -170,26 +129,10 @@
       void main(void) {
         //  const vec4 outColor;
           vec3 p = aVertexPosition;
-          p.z = p.z+abs(p.x) * sin(uTimer);
-          //p.z = abs(p.x)*5.;
+          p.z += abs(p.x) * sin(uTimer);
           gl_Position = uProjMatrix * uViewMatrix * uModelMatrix * vec4(p, 1.0);
           // projection de la position
-
-          //gl_Position = uProjMatrix * uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
           vNormal = mat3(inverse(transpose(uViewMatrix * uModelMatrix)))*normalize(aVertexNormal);
-          //
-          // vec3 n = normalize(vNormal);
-          // vec3 v = vec3(0.0, 0.0, 1.0);
-          // vec3 l = normalize(vec3(-1.0, 0.0, 1.0));
-          // vec3 r = reflect(-l, n);
-          // float s = 50.0;
-          //
-          // vec3 Kd = vec3(0.5, 0.5, 0.8);
-          // vec3 Ks = vec3(1.0);
-          // float diff = max(dot(l, n), 0.0);
-          // float spec = pow(max(dot(r, v), 0.0), s);
-          // //
-          // const vec4 outColor = vec4(Kd + diff + Ks * spec, 1.0);
       }
     </script>
 
@@ -197,14 +140,14 @@
       // *** le fragment shader ***
       precision mediump float; // precision des nombres flottant
 
-    in vec3 vNormal;
+      in vec3 vNormal;
       out vec4 outColor;
 
       void main(void) {
           // la couleur est attribuee au fragment courant
-	  vec3 n = normalize(vNormal);
+	        vec3 n = normalize(vNormal);
 
-	  // pour le moment, on affiche juste la normale
+	        // pour le moment, on affiche juste la normale
           outColor = vec4(n,1.);
       }
     </script>
@@ -218,11 +161,11 @@
       out vec2 vTextureCoord; // on souhaite rasteriser la coordonnee
 
       void main(void) {
-	  // projection de la position
-	  gl_Position = vec4(aVertexPosition.xy+uPosition.xy,uPosition.z, 1.0);
+	      // projection de la position
+	      gl_Position = vec4(aVertexPosition.xy+uPosition.xy,uPosition.z, 1.0);
 
-	  // stockage de la coordonnee de texture
-	  vTextureCoord = aVertexCoord;
+    	  // stockage de la coordonnee de texture
+    	  vTextureCoord = aVertexCoord;
       }
     </script>
 
@@ -233,17 +176,45 @@
       uniform vec3 maCouleur;
       uniform sampler2D uTex;
 
-    in vec2 vTextureCoord; // recuperation de la coord rasterisee
+      in vec2 vTextureCoord; // recuperation de la coord rasterisee
       out vec4 outColor;
 
       void main(void) {
-	  float alpha = 1.-smoothstep(0.2,0.25,distance(vec2(.5),vTextureCoord));
+	       float alpha = 1.-smoothstep(0.2,0.25,distance(vec2(.5),vTextureCoord));
+	       outColor = texture(uTex,vTextureCoord);
+      }
+    </script>
 
-	  // TEST: affichae d'un point avec la couleur donn�e en param�tre
-	  //outColor = vec4(alpha*maCouleur,alpha);
+    <script id="mechant-vs" type="x-shader/x-vertex">#version 300 es
+      // *** le vertex shader ***
+      layout(location=0) in vec3 aVertexPosition; // la position du sommet
+      layout(location=1) in vec2 aVertexCoord; // sa coordonnee de texture
 
-	  // TEST: affichage d'une texture donn�e en param�tre
-	  outColor = texture(uTex,vTextureCoord);
+      uniform vec3 uMechantPosition; // position du vaisseau
+      out vec2 vTextureCoord; // on souhaite rasteriser la coordonnee
+
+      void main(void) {
+	       // projection de la position
+	      gl_Position = vec4(aVertexPosition.xy+uMechantPosition.xy,uMechantPosition.z, 1.0);
+
+    	  // stockage de la coordonnee de texture
+    	  vTextureCoord = aVertexCoord;
+      }
+    </script>
+
+    <script id="mechant-fs" type="x-shader/x-fragment">#version 300 es
+      // *** le fragment shader ***
+      precision highp float; // precision des nombres flottant
+
+      uniform vec3 maCouleurMechant;
+      uniform sampler2D uMechantTex;
+
+      in vec2 vTextureCoord; // recuperation de la coord rasterisee
+      out vec4 outColor;
+
+      void main(void) {
+	       float alpha = 1.-smoothstep(0.2,0.25,distance(vec2(.5),vTextureCoord));
+      	 outColor = texture(uMechantTex,vTextureCoord);
       }
     </script>
 
@@ -251,48 +222,58 @@
 
       var background;
       var spaceship;
+      var voltorbArray = [];
       var shootSample;
+      var mechantSample;
+      var texMechant;
 
       function drawScene() {
-	  // initialisation du viewport
-	  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    	  // initialisation du viewport
+    	  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
-	  // efface les buffers de couleur et de profondeur
-	  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    	  // efface les buffers de couleur et de profondeur
+    	  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	  // dessin du fond (d�commenter pour travailler dessus)
-	  gl.useProgram(background.shader());
-	  background.sendUniformVariables();
-	  background.draw();
+    	  // dessin du fond (d�commenter pour travailler dessus)
+    	  gl.useProgram(background.shader());
+    	  background.sendUniformVariables();
+    	  background.draw();
 
-	  // dessin du vaisseau
-	  gl.useProgram(spaceship.shader());
-          spaceship.sendUniformVariables();
-	  spaceship.draw();
+    	  // dessin du vaisseau
+    	  gl.useProgram(spaceship.shader());
+        spaceship.sendUniformVariables();
+    	  spaceship.draw();
 
-	  // test pour afficher un splat quand on appuie sur espace
-	  gl.enable(gl.BLEND); // transparence activ�e
-	  gl.useProgram(shootSample.shader());
-          shootSample.sendUniformVariables();
-	  shootSample.draw();
-	  gl.disable(gl.BLEND); // transparence d�sactiv�e
+    	  // test pour afficher un splat quand on appuie sur espace
+    	  gl.enable(gl.BLEND); // transparence activ�e
+    	  gl.useProgram(shootSample.shader());
+        shootSample.sendUniformVariables();
+    	  shootSample.draw();
+
+        voltorbArray.forEach(voltorb  => {
+          gl.useProgram(voltorb.shader());
+          voltorb.sendUniformVariables();
+          voltorb.draw();
+        });
+
+        gl.disable(gl.BLEND); // transparence désactivée
       }
 
       // une bonne maniere de gerer les evenements claviers
       var currentlyPressedKeys = {};
 
       function handleKeyDown(event) {
-          currentlyPressedKeys[event.keyCode] = true;
-		  
-		  if (currentlyPressedKeys[32]) { // SPACE
-	      // exemple: comment positionner un splat devant le vaisseau
-	      var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'�cran
-	      var x = (p[0][0]+p[1][0])/2;
-	      var y = p[1][1];
-	      var z = p[1][2]+0.005; // profondeur du splat (juste derri�re le vaisseau)
+        currentlyPressedKeys[event.keyCode] = true;
 
-	      shootSample.setPosition(x,y,z);
-          }
+  		  if (currentlyPressedKeys[32]) { // SPACE
+  	      // exemple: comment positionner un splat devant le vaisseau
+  	      var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'�cran
+  	      var x = (p[0][0]+p[1][0])/2;
+  	      var y = p[1][1];
+  	      var z = p[1][2]+0.005; // profondeur du splat (juste derri�re le vaisseau)
+
+  	      shootSample.setPosition(x,y,z);
+        }
       }
 
 
@@ -322,14 +303,13 @@
           }
 
 	  if (currentlyPressedKeys[77]) { // M
-	      // juste un test pour supprimer un splat (tir)
-              shootSample.clear();
+	         // juste un test pour supprimer un splat (tir)
+            //  shootSample.clear();
           }
-
       }
 
       function mouseMove(event) {
-	  // recup evenement souris
+	       // recup evenement souris
           //var newx = 2.0*(event.clientX/gl.viewportWidth)-1.0;
           //var newy = -(2.0*(event.clientY/gl.viewportHeight)-1.0);
       }
@@ -337,19 +317,38 @@
 
       // animation
       var lastTime = 0;
-      function animate() {
-	  // fonction appel�e � chaque frame, permet d'animer la sc�ne
-          var timeNow = new Date().getTime();
-          if (lastTime != 0) {
-              // anime chacun des objets de la scene
-	      // si necessaire (en fonction du temps ecoul�)
-              var elapsed = timeNow - lastTime;
-              spaceship.setParameters(elapsed);
-              background.setParameters(elapsed);
-	      shootSample.setParameters(elapsed);
+      var lastTimeMechant = 0;
+      var lastMissile = 0;
+      var timeNow;
 
+      function animate() {
+	       // fonction appelée à chaque frame, permet d'animer la scène
+          timeNow = new Date().getTime();
+          if (lastTime != 0) {
+            // anime chacun des objets de la scene
+	          // si necessaire (en fonction du temps ecoul�)
+            var elapsed = timeNow - lastTime;
+            spaceship.setParameters(elapsed);
+            background.setParameters(elapsed);
+      	    shootSample.setParameters(elapsed);
+
+            voltorbArray.forEach(voltorb  => {
+                voltorb.setParameters(elapsed);
+                if(voltorb.position[1] < -1) {
+                    voltorb.clear();
+                }
+            });
+
+
+            voltorbArray = voltorbArray.filter(voltorb => voltorb.loaded);
+
+            if (timeNow - lastTimeMechant > 2500) {
+              voltorb = new MechantPokemon(initTexture('textures/mechant.png'));
+              voltorbArray.push(voltorb);
+              lastTimeMechant = timeNow;
           }
-          lastTime = timeNow;
+        }
+        lastTime = timeNow;
       }
 
       function tick() {
@@ -365,17 +364,18 @@
           var canvas = document.getElementById("SpaceShip");
           initGL(canvas);
 
-	  // test: cr�ation d'une texture
-	  var tex = initTexture('textures/missile.png');
+      	  // test: création d'une texture
+      	  var tex = initTexture('textures/missile.png');
 
           initBackgroundShader();
           initModelShader();
-	  initSplatShader();
+      	  initSplatShader();
+          initMechantShader();
 
-          //heightfield = new Heightfield();
+          // heightfield = new Heightfield();
           background = new Background();
           spaceship = new Model('models/plane.obj');
-	  shootSample = new Splat(tex);
+	        shootSample = new Splat(tex);
 
           // la couleur de fond sera grise fonc�e
           gl.clearColor(0.3, 0.3, 0.3, 1.0);
@@ -383,27 +383,19 @@
           // active le test de profondeur
           gl.enable(gl.DEPTH_TEST);
 
-	  // fonction de m�lange utilis�e pour la transparence
+	        // fonction de m�lange utilis�e pour la transparence
           gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
           /* Mouse and keyboard interaction functions */
-          //canvas.addEventListener('mousedown', tbMouseDown, true);
-          //canvas.addEventListener('mousemove', mouseMove, true);
-          //canvas.addEventListener('mouseup', tbMouseUp, true);
           document.onkeydown = handleKeyDown;
           document.onkeyup = handleKeyUp;
 
           // dessine la scene
           tick();
       }
-
-
     </script>
-
-
   </head>
-
-
   <body onload="webGLStart();">
     <canvas id="SpaceShip" style="border: none;" width="800" height="800"></canvas>
-</body></html>
+  </body>
+</html>
