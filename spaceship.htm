@@ -304,7 +304,9 @@
           }
 	  // CLOE
 	  if (currentlyPressedKeys[32]) { // SPACE
-		  let bouledefeuquibrule = new Splat(initTexture('textures/missile.png'))
+		  if (tabSplat.length <= 5) {
+			let bouledefeuquibrule = new Splat(initTexture('textures/bouledefeu.png'));
+
 
 		  // exemple: comment positionner un splat devant le vaisseau
 		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
@@ -316,6 +318,7 @@
 
 		  tabSplat.push(bouledefeuquibrule);
 		  console.log(tabSplat);
+		  }
 		}
       }
 
@@ -333,6 +336,7 @@
       var lastTimeMechant = 0;
       var lastMissile = 0;
       var timeNow;
+      var compteur = 0;
 
       function animate() {
 
@@ -350,8 +354,26 @@
 			      // LUCAS
             voltorbArray.forEach(voltorb  => {
                 voltorb.setParameters(elapsed);
+
+                if (compteur > 4 && compteur < 15) {
+                  voltorb.position[1] -= 0.01;
+                } else if (compteur > 14 && compteur < 20) {
+                  voltorb.position[1] -= 0.02;
+                } else if (compteur > 19 && compteur < 30) {
+                  voltorb.position[1] -= 0.025;
+                } else if (compteur == 30) {
+                  window.alert("Tous les voltorbes sont morts félicitations ! Vous pouvez recommencer une partie");
+                  compteur = 0;
+                  location.reload();
+                }
                 if(voltorb.position[1] < -1) {
                     voltorb.clear();
+                    window.alert("Un Voltorbe a fui ! Mais heureusement " + compteur + " sont morts ! Essayez de faire mieux");
+                    compteur = 0;
+                    voltorbArray.forEach(voltorb => {
+                      voltorb.clear();
+                    });
+                    location.reload();
                 }
             });
 
@@ -361,9 +383,9 @@
                   && voltorb.position[0] + voltorb.width > missile.position[0]
                   && voltorb.position[1] < missile.position[1] + missile.width
                   && voltorb.position[1] + voltorb.width > missile.position[1]) {
-
                     voltorb.clear();
                     missile.clear();
+                    compteur++;
                   }
                 });
               });

@@ -95,7 +95,7 @@ MechantPokemon.prototype.setPosition = function(x,y,z) {
 MechantPokemon.prototype.setParameters = function(elapsed) {
     this.time += 0.01*elapsed;
     // on peut animer les splats ici. Par exemple :
-    this.position[1] -= 0.015; // permet de déplacer le méchant vers le haut au fil du temps
+    this.position[1] -= 0.015; // permet de déplacer le méchant vers le bas au fil du temps
 }
 
 MechantPokemon.prototype.sendUniformVariables = function() {
