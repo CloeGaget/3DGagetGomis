@@ -83,7 +83,7 @@ MechantPokemon.prototype.initParameters = function() {
     // paramètres par défaut d'un splat (taille, position, couleur)
     this.width = 0.2;
     this.height = 0.2;
-    this.position = [Math.random(),1.0,0.0];
+    this.position = [(Math.random() * Math.round(Math.random()) * 2 - 1),1.0,0.0];
     this.couleur = [1,0,0];
     this.time = 0.0;
 }
@@ -95,8 +95,7 @@ MechantPokemon.prototype.setPosition = function(x,y,z) {
 MechantPokemon.prototype.setParameters = function(elapsed) {
     this.time += 0.01*elapsed;
     // on peut animer les splats ici. Par exemple :
-    this.position[1] -= 0.03; // permet de déplacer le splat vers le haut au fil du temps
-    //this.position[0] += 0.02*Math.sin(this.time); // permet de déplacer le splat sur l'axe X
+    this.position[1] -= 0.03; // permet de déplacer le méchant vers le haut au fil du temps
 }
 
 MechantPokemon.prototype.sendUniformVariables = function() {
