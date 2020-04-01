@@ -106,7 +106,7 @@
           return v1;
         }
 
-      void main(void) { // Méthode pour l'aspect du background (Génération dite "procédurale" du background)
+      void main(void) { // Mï¿½thode pour l'aspect du background (Gï¿½nï¿½ration dite "procï¿½durale" du background)
     	  vec2 p = vTextureCoord*2.0-vec2(1.0)+uOffset;
 
     	  float d = computeHeight(p); // profondeur au point p
@@ -222,10 +222,10 @@
 
       var background;
       var spaceship;
-	  //var shootSample;
-//tableau de splats
-	  var tabSplat = [];
-	  var voltorbArray = [];
+  	  //var shootSample;
+      //tableau de splats
+  	  var tabSplat = [];
+  	  var voltorbArray = [];
       var shootSample;
       var mechantSample;
       var texMechant;
@@ -252,22 +252,22 @@
 		gl.enable(gl.BLEND); // transparence activ?e
 		// clear des bouboules
 		tabSplat = tabSplat.filter(clearBouboule);
-		// création de bouboules
+		// crï¿½ation de bouboules
 		tabSplat.forEach(function (bouledefeu){
 			gl.useProgram(bouledefeu.shader());
 			bouledefeu.sendUniformVariables();
 			bouledefeu.draw();
 		});
-	  
+
 		// LUCAS
 		voltorbArray.forEach(voltorb  => {
           gl.useProgram(voltorb.shader());
           voltorb.sendUniformVariables();
           voltorb.draw();
         });
-		
+
 		gl.disable(gl.BLEND); // transparence dÃ©sactivÃ©e
-      
+
 	  }
 
       // une bonne maniere de gerer les evenements claviers
@@ -305,7 +305,7 @@
 	  // CLOE
 	  if (currentlyPressedKeys[32]) { // SPACE
 		  let bouledefeuquibrule = new Splat(initTexture('textures/missile.png'))
-		
+
 		  // exemple: comment positionner un splat devant le vaisseau
 		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
 		  var x = (p[0][0]+p[1][0])/2;
@@ -313,13 +313,13 @@
 		  var z = p[1][2]+0.005; // profondeur du splat (juste derri?re le vaisseau)
 
 		  bouledefeuquibrule.setPosition(x,y,z);
-		  
+
 		  tabSplat.push(bouledefeuquibrule);
 		  console.log(tabSplat);
 		}
       }
-	  
-	  
+
+
 
       function mouseMove(event) {
 	       // recup evenement souris
@@ -344,10 +344,10 @@
             var elapsed = timeNow - lastTime;
             spaceship.setParameters(elapsed);
             background.setParameters(elapsed);
-			// CLOE
+			      // CLOE
       	    tabSplat.forEach(bouledefeu => bouledefeu.setParameters(elapsed));
 
-			// LUCAS
+			      // LUCAS
             voltorbArray.forEach(voltorb  => {
                 voltorb.setParameters(elapsed);
                 if(voltorb.position[1] < -1) {
@@ -355,6 +355,18 @@
                 }
             });
 
+            voltorbArray.forEach(voltorb => {
+              tabSplat.forEach(missile => {
+                if (voltorb.position[0] < missile.position[0] + missile.width
+                  && voltorb.position[0] + voltorb.width > missile.position[0]
+                  && voltorb.position[1] < missile.position[1] + missile.width
+                  && voltorb.position[1] + voltorb.width > missile.position[1]) {
+
+                    voltorb.clear();
+                    missile.clear();
+                  }
+                });
+              });
 
             voltorbArray = voltorbArray.filter(voltorb => voltorb.loaded);
 
@@ -362,9 +374,11 @@
               voltorb = new MechantPokemon(initTexture('textures/mechant.png'));
               voltorbArray.push(voltorb);
               lastTimeMechant = timeNow;
-			}
+			      }
         }
         lastTime = timeNow;
+
+
       }
 
       function tick() {
@@ -392,7 +406,7 @@
           // heightfield = new Heightfield();
           background = new Background();
           spaceship = new Model('models/plane.obj');
-		  
+
 		  // CLOE
 		  //shootSample = new Splat(tex);
 
@@ -402,7 +416,7 @@
           // active le test de profondeur
           gl.enable(gl.DEPTH_TEST);
 
-		  // fonction de m?lange utilisée pour la transparence
+		  // fonction de m?lange utilisï¿½e pour la transparence
           gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
           /* Mouse and keyboard interaction functions */
@@ -413,7 +427,7 @@
           tick();
       }
 
-	// CLOE  
+	// CLOE
 	function clearBouboule(uneBouBouleDeFeu){
 		if (uneBouBouleDeFeu.position[1] > 1) {
 			uneBouBouleDeFeu.clear();
