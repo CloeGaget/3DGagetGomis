@@ -304,7 +304,9 @@
           }
 	  // CLOE
 	  if (currentlyPressedKeys[32]) { // SPACE
-		  let bouledefeuquibrule = new Splat(initTexture('textures/missile.png'))
+		  if (tabSplat.length <= 5) {
+			let bouledefeuquibrule = new Splat(initTexture('textures/bouledefeu.png'));
+		  
 
 		  // exemple: comment positionner un splat devant le vaisseau
 		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
@@ -316,6 +318,7 @@
 
 		  tabSplat.push(bouledefeuquibrule);
 		  console.log(tabSplat);
+		  }
 		}
       }
 
