@@ -81,7 +81,7 @@ Splat.prototype.shader = function() {
 
 Splat.prototype.initParameters = function() {
     // paramètres par défaut d'un splat (taille, position, couleur)
-    this.width = 0.2;
+    this.width = 0.1;
     this.height = 0.2;
     this.position = [0.0,0.0,0.0];
     this.couleur = [1,0,0];

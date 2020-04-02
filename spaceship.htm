@@ -304,20 +304,22 @@
           }
 	  // CLOE
 	  if (currentlyPressedKeys[32]) { // SPACE
-		  if (tabSplat.length <= 5) {
-			let bouledefeuquibrule = new Splat(initTexture('textures/bouledefeu.png'));
+		  if (tabSplat.length < 5) {
+  			let bouledefeuquibrule = new Splat(initTexture('textures/bouledefeu.png'));
 
 
-		  // exemple: comment positionner un splat devant le vaisseau
-		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
-		  var x = (p[0][0]+p[1][0])/2;
-		  var y = p[1][1];
-		  var z = p[1][2]+0.005; // profondeur du splat (juste derri?re le vaisseau)
+  		  // exemple: comment positionner un splat devant le vaisseau
+  		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
+  		  var x = (p[0][0]+p[1][0])/2;
+  		  var y = p[1][1];
+  		  var z = p[1][2]+0.005; // profondeur du splat (juste derri?re le vaisseau)
 
-		  bouledefeuquibrule.setPosition(x,y,z);
+        if (tabSplat.length >= 1 && (tabSplat[tabSplat.length-1].position[1] >= y+0.1) || (tabSplat.length == 0)) {
+          bouledefeuquibrule.setPosition(x,y,z);
 
-		  tabSplat.push(bouledefeuquibrule);
-		  console.log(tabSplat);
+    		  tabSplat.push(bouledefeuquibrule);
+    		  console.log(tabSplat);
+        }
 		  }
 		}
       }
