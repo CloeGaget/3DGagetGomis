@@ -222,14 +222,14 @@
 
       var background;
       var spaceship;
-  	  //var shootSample;
+
       // CLOE fire 1
       // tableau de splats
   	  var tabSplat = [];
+
+      // CLOE voltorb 1
+      // tableau d'ennemis
   	  var voltorbArray = [];
-      var shootSample;
-      var mechantSample;
-      var texMechant;
 
       function drawScene() {
 		// initialisation du viewport
@@ -248,9 +248,10 @@
         spaceship.sendUniformVariables();
 		spaceship.draw();
 
-		// CLOE fire 4
-    // draw
+    // désactivation de l'affichage
 		gl.enable(gl.BLEND); // transparence activ?e
+
+    // CLOE fire 4
 		// clear des splats pour éviter la surcharge
 		tabSplat = tabSplat.filter(clearBouboule);
 		// création et affichage des splats
@@ -260,13 +261,15 @@
 			bouledefeu.draw();
 		});
 
-		// LUCAS
+		// CLOE voltorb
+    // création et affichage des ennemis
 		voltorbArray.forEach(voltorb  => {
           gl.useProgram(voltorb.shader());
           voltorb.sendUniformVariables();
           voltorb.draw();
         });
 
+    // réactivation de l'affichage
 		gl.disable(gl.BLEND); // transparence désactivée
 
 	  }
@@ -359,10 +362,13 @@
             // animation de chaque splat
       	    tabSplat.forEach(bouledefeu => bouledefeu.setParameters(elapsed));
 
-			      // LUCAS
+			      // CLOE voltorb
+            // animation de chaque ennemi
             voltorbArray.forEach(voltorb  => {
                 voltorb.setParameters(elapsed);
 
+                // LUCAS
+                // gestion des parties
                 if (compteur > 4 && compteur < 15) {
                   voltorb.position[1] -= 0.01;
                 } else if (compteur > 14 && compteur < 20) {
@@ -385,6 +391,8 @@
                 }
             });
 
+            // LUCAS
+            // Collision
             voltorbArray.forEach(voltorb => {
               tabSplat.forEach(missile => {
                 if (voltorb.position[0] < missile.position[0] + missile.width
@@ -400,6 +408,7 @@
 
             voltorbArray = voltorbArray.filter(voltorb => voltorb.loaded);
 
+            // CLOE voltorb
             if (timeNow - lastTimeMechant > 2500) {
               voltorb = new MechantPokemon(initTexture('textures/mechant.png'));
               voltorbArray.push(voltorb);
