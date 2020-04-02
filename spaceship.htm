@@ -223,7 +223,8 @@
       var background;
       var spaceship;
   	  //var shootSample;
-      //tableau de splats
+      // CLOE fire 1
+      // tableau de splats
   	  var tabSplat = [];
   	  var voltorbArray = [];
       var shootSample;
@@ -247,12 +248,12 @@
         spaceship.sendUniformVariables();
 		spaceship.draw();
 
-		// CLOE
-		// test pour afficher un splat quand on appuie sur espace
+		// CLOE fire 4
+    // draw
 		gl.enable(gl.BLEND); // transparence activ?e
-		// clear des bouboules
+		// clear des splats pour éviter la surcharge
 		tabSplat = tabSplat.filter(clearBouboule);
-		// cr�ation de bouboules
+		// création et affichage des splats
 		tabSplat.forEach(function (bouledefeu){
 			gl.useProgram(bouledefeu.shader());
 			bouledefeu.sendUniformVariables();
@@ -302,21 +303,25 @@
 	  if (currentlyPressedKeys[83]) { // S
               spaceship.move(0,-1);
           }
-	  // CLOE
+	  // CLOE fire 2
 	  if (currentlyPressedKeys[32]) { // SPACE
+      // si il y a moins de 5 splats déjà existants
 		  if (tabSplat.length < 5) {
+        // nouveau splat
   			let bouledefeuquibrule = new Splat(initTexture('textures/bouledefeu.png'));
 
-
-  		  // exemple: comment positionner un splat devant le vaisseau
-  		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'?cran
+  		  // création des coordonnées du splat en fonction de celles du dragon
+  		  var p = spaceship.getBBox(); // boite englobante du vaisseau sur l'écran
   		  var x = (p[0][0]+p[1][0])/2;
   		  var y = p[1][1];
-  		  var z = p[1][2]+0.005; // profondeur du splat (juste derri?re le vaisseau)
+  		  var z = p[1][2]+0.005; // profondeur du splat (juste derrière le dragon)
 
+        // si il existe déjà au moins 1 splat dans le tableau et qu'il a avancé légèrement
+        // ou si il n'y a encore aucun splat
         if (tabSplat.length >= 1 && (tabSplat[tabSplat.length-1].position[1] >= y+0.1) || (tabSplat.length == 0)) {
+          // on place notre splat correctement
           bouledefeuquibrule.setPosition(x,y,z);
-
+          // et on l'ajoute au tableau de splats
     		  tabSplat.push(bouledefeuquibrule);
     		  console.log(tabSplat);
         }
@@ -350,7 +355,8 @@
             var elapsed = timeNow - lastTime;
             spaceship.setParameters(elapsed);
             background.setParameters(elapsed);
-			      // CLOE
+			      // CLOE fire 5
+            // animation de chaque splat
       	    tabSplat.forEach(bouledefeu => bouledefeu.setParameters(elapsed));
 
 			      // LUCAS
@@ -417,11 +423,6 @@
           // initialisation du canvas et des objets OpenGL
           var canvas = document.getElementById("SpaceShip");
           initGL(canvas);
-
-		  // CLOE
-		  // test: cr?ation d'une texture
-		  //var tex = initTexture('textures/missile.png');
-
           initBackgroundShader();
           initModelShader();
       	  initSplatShader();
@@ -430,9 +431,6 @@
           // heightfield = new Heightfield();
           background = new Background();
           spaceship = new Model('models/plane.obj');
-
-		  // CLOE
-		  //shootSample = new Splat(tex);
 
           // la couleur de fond sera grise fonc?e
           gl.clearColor(0.3, 0.3, 0.3, 1.0);
@@ -451,7 +449,8 @@
           tick();
       }
 
-	// CLOE
+	// CLOE fire 3
+  // fonction qui supprime chaque splat sortant de l'écran pour ne pas surcharger
 	function clearBouboule(uneBouBouleDeFeu){
 		if (uneBouBouleDeFeu.position[1] > 1) {
 			uneBouBouleDeFeu.clear();
