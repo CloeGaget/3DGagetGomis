@@ -261,8 +261,8 @@
 			bouledefeu.draw();
 		});
 
-		// CLOE voltorb
-    // création et affichage des ennemis
+		// CLOE voltorb 5
+    // création et affichage des ennemis présents dans le tableau
 		voltorbArray.forEach(voltorb  => {
           gl.useProgram(voltorb.shader());
           voltorb.sendUniformVariables();
@@ -343,7 +343,11 @@
 
       // animation
       var lastTime = 0;
+
+      // CLOE voltorb 2
+      // variable pour le dernier moment où un ennemi a spawn
       var lastTimeMechant = 0;
+
       var lastMissile = 0;
       var timeNow;
       var compteur = 0;
@@ -362,9 +366,10 @@
             // animation de chaque splat
       	    tabSplat.forEach(bouledefeu => bouledefeu.setParameters(elapsed));
 
-			      // CLOE voltorb
-            // animation de chaque ennemi
+            // pour chaque voltorb du tableau
             voltorbArray.forEach(voltorb  => {
+                // CLOE voltorb 3
+                // animation de chaque splat
                 voltorb.setParameters(elapsed);
 
                 // LUCAS
@@ -408,10 +413,12 @@
 
             voltorbArray = voltorbArray.filter(voltorb => voltorb.loaded);
 
-            // CLOE voltorb
+            // CLOE voltorb 4
+            // après clear du dernier ennemi, crée un nouvel ennemi
             if (timeNow - lastTimeMechant > 2500) {
               voltorb = new MechantPokemon(initTexture('textures/mechant.png'));
               voltorbArray.push(voltorb);
+              // actualisation du dernier spawn d'ennemi
               lastTimeMechant = timeNow;
 			      }
         }
